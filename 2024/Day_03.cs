@@ -34,19 +34,19 @@ public class Day_03
         return total;
     }
 
-    public static Dictionary<int, string> FindString(in string input, in string[] targets)
+    public static IEnumerable<KeyValuePair<int, string>> FindString(in string input, in string[] targets)
     {
-        var ret = new Dictionary<int, string>();
+        var ret = new List<KeyValuePair<int, string>>();
         foreach (var target in targets) {
             int startIindex = input.IndexOf(target[0]);
             while (startIindex > 0)
             {
                 if (input.Substring(startIindex, target.Length) == target)
-                    ret.Add(startIindex, target);
+                    ret.Add(new KeyValuePair<int, string>(startIindex, target));
                 startIindex = input.IndexOf(target[0], startIindex + 1);
             }
         }
-        return ret.OrderBy(pair => pair.Key).ToDictionary();
+        return ret.OrderBy(pair => pair.Key);
     }
 
     public static int EvalFromInput(in string input, int startIindex)
@@ -54,7 +54,7 @@ public class Day_03
         startIindex += 4;
         int endIndex = input.IndexOf(')', startIindex);
         string slice = input[startIindex..endIndex];
-        if (slice.IndexOf(',') <= 0 || slice.EndsWith(',') || slice.Count(Char.IsNumber) != slice.Length - 1)
+        if (slice.IndexOf(',') <= 0 || slice.EndsWith(',') || slice.Count(char.IsAsciiDigit) != slice.Length - 1)
             return 0;
 
         string[] split = slice.Split(',');
