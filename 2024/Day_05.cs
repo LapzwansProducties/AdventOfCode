@@ -55,13 +55,11 @@ public static class Day_05
     {
         for (int index = 0; index < row.Count; index++)
         {
-            var rules = PageOrderRules.Where(rule => rule.Item1 == row[index]);
-            foreach (var rule in rules)
-            {
-                int ruleFuturePageIndex = row.IndexOf(rule.Item2);
-                if (ruleFuturePageIndex >= 0 && ruleFuturePageIndex < index)
-                    return false;
-            }
+            bool numberInWrongPosition = PageOrderRules
+                .Where(rule => rule.Item1 == row[index] && row.Contains(rule.Item2))
+                .Any(rule => row.IndexOf(rule.Item2) < index);
+            if (numberInWrongPosition)
+                return false;
         }
 
         return true;
@@ -71,7 +69,9 @@ public static class Day_05
     {
         for (int index = 0; index < row.Count; index++)
         {
-            var minimumForbiddenIndexForNumberArr = PageOrderRules.Where(rule => rule.Item1 == row[index]).Select(pair => row.IndexOf(pair.Item2)).Where(num => num >= 0);
+            var minimumForbiddenIndexForNumberArr = PageOrderRules
+                .Where(rule => rule.Item1 == row[index] && row.Contains(rule.Item2))
+                .Select(pair => row.IndexOf(pair.Item2));
             if (!minimumForbiddenIndexForNumberArr.Any())
                 continue;
             var minimumForbiddenIndexForNumber = minimumForbiddenIndexForNumberArr.Min();
