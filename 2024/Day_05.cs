@@ -13,7 +13,9 @@ public static class Day_05
         List<List<int>> updates;
         setData(input, out PageOrderRules, out updates);
 
-        return getUpdateRows(PageOrderRules, updates, true).Select(row => row[row.Count >> 1]).Sum();
+        return GetRows(PageOrderRules, updates, true)
+            .Select(row => row[row.Count >> 1])
+            .Sum();
     }
 
     [TestCase("47|53\n97|13\n97|61\n97|47\n75|29\n61|13\n75|53\n29|13\n97|29\n53|29\n61|53\n97|53\n61|29\n47|13\n75|47\n97|75\n47|61\n75|61\n47|29\n75|13\n53|13\n\n75,47,61,53,29\n97,61,53,29,13\n75,29,13\n75,97,47,61,53\n61,13,29\n97,13,75,29,47", ExpectedResult = 123)]
@@ -24,15 +26,9 @@ public static class Day_05
         List<List<int>> updates;
         setData(input, out PageOrderRules, out updates);
 
-        var incorrectRows = getUpdateRows(PageOrderRules, updates, false);
-
-        List<List<int>> newCorrectRows = new List<List<int>>();
-        foreach (var row in incorrectRows)
-        {
-            newCorrectRows.Add(correctRow(PageOrderRules, row));
-        }
-
-        return newCorrectRows.Select(row => row[row.Count >> 1]).Sum();
+        return GetRows(PageOrderRules, updates, false)
+            .Select(row => CorrectRow(PageOrderRules, row)[row.Count >> 1])
+            .Sum();
     }
 
     public static void setData(string input, out List<Tuple<int, int>> PageOrderRules, out List<List<int>> updates)
@@ -52,22 +48,20 @@ public static class Day_05
             }).ToList();
     }
 
-    public static List<List<int>> getUpdateRows(List<Tuple<int, int>> PageOrderRules, List<List<int>> updates, bool isCorrect)
+    public static List<List<int>> GetRows(List<Tuple<int, int>> PageOrderRules, List<List<int>> updates, bool isCorrect)
     {
-        updates.Count(row => updateRowIsCorrect(PageOrderRules, row));
+        updates.Count(row => RowIsCorrect(PageOrderRules, row));
         List<List<int>> ret = [];
         foreach (var row in updates)
         {
-            if (updateRowIsCorrect(PageOrderRules, row) == isCorrect)
+            if (RowIsCorrect(PageOrderRules, row) == isCorrect)
                 ret.Add(row);
         }
         return ret;
     }
 
-    public static bool updateRowIsCorrect(List<Tuple<int, int>> PageOrderRules, List<int> row)
+    public static bool RowIsCorrect(List<Tuple<int, int>> PageOrderRules, List<int> row)
     {
-        bool correct = true;
-
         for (int index = 0; index < row.Count; index++)
         {
             var rules = PageOrderRules.Where(rule => rule.Item1 == row[index]);
@@ -75,18 +69,15 @@ public static class Day_05
             {
                 int ruleFuturePageIndex = row.IndexOf(rule.Item2);
                 if (ruleFuturePageIndex >= 0 && ruleFuturePageIndex < index)
-                    correct = false;
+                    return false;
             }
         }
 
-        return correct;
+        return true;
     }
 
-    public static List<int> correctRow(List<Tuple<int, int>> PageOrderRules, List<int> row)
+    public static List<int> CorrectRow(List<Tuple<int, int>> PageOrderRules, List<int> row)
     {
-        List<int> incorrectNumbers = [];
-        List<int> correctNumbers = [];
-
         for (int index = 0; index < row.Count; index++)
         {
             var minimumForbiddenIndexForNumberArr = PageOrderRules.Where(rule => rule.Item1 == row[index]).Select(pair => row.IndexOf(pair.Item2)).Where(num => num >= 0);
