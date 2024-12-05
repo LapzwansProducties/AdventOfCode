@@ -49,16 +49,7 @@ public static class Day_05
     }
 
     public static List<List<int>> GetRows(List<Tuple<int, int>> PageOrderRules, List<List<int>> updates, bool isCorrect)
-    {
-        updates.Count(row => RowIsCorrect(PageOrderRules, row));
-        List<List<int>> ret = [];
-        foreach (var row in updates)
-        {
-            if (RowIsCorrect(PageOrderRules, row) == isCorrect)
-                ret.Add(row);
-        }
-        return ret;
-    }
+    => updates.Where(row => RowIsCorrect(PageOrderRules, row) == isCorrect).ToList();
 
     public static bool RowIsCorrect(List<Tuple<int, int>> PageOrderRules, List<int> row)
     {
