@@ -8,15 +8,14 @@ public class Day_06
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        bool wasIntersectionOrCorner = false;
         int AmountOfLoops = 0;
         while (getPos(map) != null)
         {
-            while (forward(ref map, ref wasIntersectionOrCorner, ref AmountOfLoops));
+            while (forward(ref map, ref AmountOfLoops));
             TurnRight(map);
         }
         PrintMap(map);
-        return map.Sum(row=>row.Count(c => c=='-' || c == '|' || c=='+'));
+        return map.Sum(row=>row.Count(c => c == 'X'));
     }
 
     [TestCase("....#.....\n.........#\n..........\n..#.......\n.......#..\n..........\n.#..^.....\n........#.\n#.........\n......#...", ExpectedResult = 6)]
@@ -25,11 +24,10 @@ public class Day_06
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        bool wasIntersectionOrCorner = false;
         int AmountOfLoops = 0;
         while (getPos(map) != null)
         {
-            while (forward(ref map, ref wasIntersectionOrCorner, ref AmountOfLoops));
+            while (forward(ref map, ref AmountOfLoops));
             TurnRight(map);
         }
         PrintMap(map);
@@ -37,7 +35,7 @@ public class Day_06
 
     }
 
-    public bool forward(ref char[][] map, ref bool wasIntersectionOrCorner, ref int AmountOfLoops)
+    public bool forward(ref char[][] map, ref int AmountOfLoops)
     {
         var pos = getPos(map);
         if (pos == null)
@@ -45,7 +43,6 @@ public class Day_06
 
         int targetY = 0;
         int targetX = 0;
-        char footprintSymbol = ' ';
         char directionSymbol = ' ';
 
         switch ((Direction)map[pos.y][pos.x])
@@ -53,58 +50,39 @@ public class Day_06
             case Direction.North:
                 targetY = pos.y - 1;
                 targetX = pos.x;
-                footprintSymbol = '|';
                 directionSymbol = '^';
                 break;
             case Direction.East:
                 targetY = pos.y;
                 targetX = pos.x + 1;
-                footprintSymbol = '-';
                 directionSymbol = '>';
                 break;
             case Direction.South:
                 targetY = pos.y + 1;
                 targetX = pos.x;
-                footprintSymbol = '|';
                 directionSymbol = 'v';
                 break;
             case Direction.West:
                 targetY = pos.y;
                 targetX = pos.x - 1;
-                footprintSymbol = '-';
                 directionSymbol = '<';
                 break;
         }
 
-        if (wasIntersectionOrCorner)
-            footprintSymbol = '+';
-
         if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
         {
-            map[pos.y][pos.x] = footprintSymbol;
-            wasIntersectionOrCorner = false;
+            map[pos.y][pos.x] = 'X';
             return true;
         }
         else if (map[targetY][targetX] == '#')
         {
-            wasIntersectionOrCorner = true;
             return false;
-        }
-        else if (new char[] {'|', '-', '+' }.Contains(map[targetY][targetX]))
-        {
-            map[pos.y][pos.x] = footprintSymbol;
-            map[targetY][targetX] = directionSymbol;
-            wasIntersectionOrCorner = true;
-            if (RightIsWalkedPath(map))
-                AmountOfLoops++;
-            return true;
         }
         else
         {
-            map[pos.y][pos.x] = footprintSymbol;
+            map[pos.y][pos.x] = 'X';
             map[targetY][targetX] = directionSymbol;
-            wasIntersectionOrCorner = false;
-            if (RightIsWalkedPath(map))
+            if (BlockingForwardResultsInLoop(map))
                 AmountOfLoops++;
             return true;
         }
@@ -141,15 +119,17 @@ public class Day_06
         map[pos.y][pos.x] = TurnRight((Direction)map[pos.y][pos.x]);
     }
 
-    public bool RightIsWalkedPath(in char[][] map)
+    public bool BlockingForwardResultsInLoop(in char[][] map)
     {
         Position? pos = getPos(map);
 
         if (pos == null)
             return false;
 
-        int dirY = 0;
-        int dirX = 0;
+        int forwardDirY = 0;
+        int forwardDirX = 0;
+        int rightDirY = 0;
+        int rightDirX = 0;
 
         int posY = pos.y;
         int posX = pos.x;
@@ -157,32 +137,45 @@ public class Day_06
         switch ((Direction)map[pos.y][pos.x])
         {
             case Direction.North:
-                dirY = 0;
-                dirX = 1;
+                forwardDirY = -1;
+                forwardDirX = 0;
+                rightDirY = 0;
+                rightDirX = 1;
                 break;
             case Direction.East:
-                dirY = 1;
-                dirX = 0;
+                forwardDirY = 0;
+                forwardDirX = 1;
+                rightDirY = 1;
+                rightDirX = 0;
                 break;
             case Direction.South:
-                dirY = 0;
-                dirX = -1;
+                forwardDirY = 1;
+                forwardDirX = 0;
+                rightDirY = 0;
+                rightDirX = -1;
                 break;
             case Direction.West:
-                dirY = -1;
-                dirX = 0;
+                forwardDirY = 0;
+                forwardDirX = -1;
+                rightDirY = -1;
+                rightDirX = 0;
                 break;
         }
 
-        while (posY > 0 && posY < map.Length && posX > 0 && posX < map[0].Length){
+        int forwardPosY = posY + forwardDirY;
+        int forwardPosX = posX + forwardDirX;
+        if (forwardPosY >= 0 && forwardPosY < map.Length && forwardPosX >= 0 && forwardPosX < map[0].Length && map[forwardPosY][forwardPosX] != '.')
+            return false;
+
+        while (posY > 0 && posY < map.Length - 1 && posX > 0 && posX < map[0].Length - 1){
             char c = map[posY][posX];
             if (c == '#')
                 return false;
-            if (new char[] { '|', '-', '+' }.Contains(c) && map[posY + dirY][posX+dirX] == '#')
+            else if (c == 'X' && map[posY + rightDirY][posX + rightDirX] == '#')
                 return true;
 
-            posY += dirY;
-            posX += dirX;
+            posY += rightDirY;
+            posX += rightDirX;
         }
 
         return false;
