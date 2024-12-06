@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode._2024;
+﻿using System.IO;
+
+namespace AdventOfCode._2024;
 
 public class Day_06
 {
@@ -8,13 +10,7 @@ public class Day_06
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        int AmountOfLoops = 0;
-        while (getPos(map) != null)
-        {
-            while (forward(ref map, ref AmountOfLoops));
-            TurnRight(map);
-        }
-        PrintMap(map);
+        move(ref map);
         return map.Sum(row=>row.Count(c => c == 'X'));
     }
 
@@ -24,67 +20,129 @@ public class Day_06
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        int AmountOfLoops = 0;
-        while (getPos(map) != null)
-        {
-            while (forward(ref map, ref AmountOfLoops));
-            TurnRight(map);
-        }
-        PrintMap(map);
-        return AmountOfLoops;
-
+        var positions = move(ref map);
+        var data = positions.Where(pos => VirtualWalkEndsInLoop(map, pos));
+        return data.Count();
     }
 
-    public bool forward(ref char[][] map, ref int AmountOfLoops)
+    public Dictionary<Position, Direction> move(ref char[][] map)
     {
+        var ret = new Dictionary<Position, Direction>();
         var pos = getPos(map);
         if (pos == null)
-            return false;
+            return [];
 
         int targetY = 0;
         int targetX = 0;
         char directionSymbol = ' ';
+        bool afterCorner = false;
 
-        switch ((Direction)map[pos.y][pos.x])
+        while (true)
         {
-            case Direction.North:
-                targetY = pos.y - 1;
-                targetX = pos.x;
-                directionSymbol = '^';
-                break;
-            case Direction.East:
-                targetY = pos.y;
-                targetX = pos.x + 1;
-                directionSymbol = '>';
-                break;
-            case Direction.South:
-                targetY = pos.y + 1;
-                targetX = pos.x;
-                directionSymbol = 'v';
-                break;
-            case Direction.West:
-                targetY = pos.y;
-                targetX = pos.x - 1;
-                directionSymbol = '<';
-                break;
-        }
+            switch ((Direction)map[pos.y][pos.x])
+            {
+                case Direction.North:
+                    targetY = pos.y - 1;
+                    targetX = pos.x;
+                    directionSymbol = '^';
+                    break;
+                case Direction.East:
+                    targetY = pos.y;
+                    targetX = pos.x + 1;
+                    directionSymbol = '>';
+                    break;
+                case Direction.South:
+                    targetY = pos.y + 1;
+                    targetX = pos.x;
+                    directionSymbol = 'v';
+                    break;
+                case Direction.West:
+                    targetY = pos.y;
+                    targetX = pos.x - 1;
+                    directionSymbol = '<';
+                    break;
+            }
 
-        if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
-        {
-            map[pos.y][pos.x] = 'X';
-            return true;
+            if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
+            {
+                map[pos.y][pos.x] = 'X';
+                return ret;
+            }
+            else if (map[targetY][targetX] == '#')
+            {
+                map[pos.y][pos.x] = TurnRight((Direction)map[pos.y][pos.x]);
+                ret.Remove(new Position() { x = pos.x, y = pos.y });
+                afterCorner = true;
+            }
+            else
+            {
+                map[pos.y][pos.x] = 'X';
+                map[targetY][targetX] = directionSymbol;
+                pos.y = targetY;
+                pos.x = targetX;
+
+                if(!afterCorner && !ret.ContainsKey(new Position { x = targetX, y = targetY }))
+                    ret.Add(new Position { x = targetX, y = targetY }, (Direction)directionSymbol);
+
+                afterCorner = false;
+            }
         }
-        else if (map[targetY][targetX] == '#')
+    }
+    public bool VirtualWalkEndsInLoop(char[][] map, KeyValuePair<Position, Direction> position)
+    {
+        var pos = position.Key;
+        var dir = position.Value;
+
+        dir = (Direction)TurnRight(dir);
+
+        int directionY = 0;
+        int directionX = 0;
+
+        while (true)
         {
-            return false;
-        }
-        else
-        {
-            map[pos.y][pos.x] = 'X';
-            map[targetY][targetX] = directionSymbol;
-            if (BlockingForwardResultsInLoop(map))
-                AmountOfLoops++;
-            return true;
+            switch (dir)
+            {
+                case Direction.North:
+                    directionY = -1;
+                    directionX = 0;
+                    break;
+                case Direction.East:
+                    directionY = 0;
+                    directionX = +1;
+                    break;
+                case Direction.South:
+                    directionY = 1;
+                    directionX = 0;
+                    break;
+                case Direction.West:
+                    directionY = 0 ;
+                    directionX = -1;
+                    break;
+            }
+
+
+            if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
+            {
+                return false;
+            }
+
+            int targetY = pos.y + directionY;
+            int targetX = pos.x + directionX;
+
+            char targetChar = map[targetY][targetX];
+
+            if (targetChar != '#')
+            {
+                pos.y = targetY;
+                pos.x = targetX;
+            }
+            else
+            {
+                if (map[pos.y][pos.x] == 'X')
+                    return true;
+                else
+                    dir = (Direction)TurnRight(dir);
+            }
         }
     }
 
@@ -100,7 +158,7 @@ public class Day_06
                     case '>':
                     case 'v':
                     case '<':
-                        return new Position(y, x);
+                        return new Position {y=y, x=x};
                     default:
                         continue;
                 }
@@ -108,77 +166,6 @@ public class Day_06
         }
 
         return null;
-    }
-
-    public void TurnRight(in char[][] map) {
-        Position? pos = getPos(map);
-
-        if (pos == null)
-            return;
-
-        map[pos.y][pos.x] = TurnRight((Direction)map[pos.y][pos.x]);
-    }
-
-    public bool BlockingForwardResultsInLoop(in char[][] map)
-    {
-        Position? pos = getPos(map);
-
-        if (pos == null)
-            return false;
-
-        int forwardDirY = 0;
-        int forwardDirX = 0;
-        int rightDirY = 0;
-        int rightDirX = 0;
-
-        int posY = pos.y;
-        int posX = pos.x;
-
-        switch ((Direction)map[pos.y][pos.x])
-        {
-            case Direction.North:
-                forwardDirY = -1;
-                forwardDirX = 0;
-                rightDirY = 0;
-                rightDirX = 1;
-                break;
-            case Direction.East:
-                forwardDirY = 0;
-                forwardDirX = 1;
-                rightDirY = 1;
-                rightDirX = 0;
-                break;
-            case Direction.South:
-                forwardDirY = 1;
-                forwardDirX = 0;
-                rightDirY = 0;
-                rightDirX = -1;
-                break;
-            case Direction.West:
-                forwardDirY = 0;
-                forwardDirX = -1;
-                rightDirY = -1;
-                rightDirX = 0;
-                break;
-        }
-
-        int forwardPosY = posY + forwardDirY;
-        int forwardPosX = posX + forwardDirX;
-        if (forwardPosY >= 0 && forwardPosY < map.Length && forwardPosX >= 0 && forwardPosX < map[0].Length && map[forwardPosY][forwardPosX] != '.')
-            return false;
-
-        while (posY > 0 && posY < map.Length - 1 && posX > 0 && posX < map[0].Length - 1){
-            char c = map[posY][posX];
-            if (c == '#')
-                return false;
-            else if (c == 'X' && map[posY + rightDirY][posX + rightDirX] == '#')
-                return true;
-
-            posY += rightDirY;
-            posX += rightDirX;
-        }
-
-        return false;
     }
 
     public char TurnRight(Direction direction)
@@ -213,4 +200,7 @@ public enum Direction
     West = '<'
 }
 
-public record Position(int y, int x);
+public record Position{
+    public int y {  get; set; }
+    public int x {  get; set; }
+};
