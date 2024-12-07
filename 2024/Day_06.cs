@@ -10,139 +10,77 @@ public class Day_06
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        move(ref map);
-        return map.Sum(row=>row.Count(c => c == 'X'));
+        return move(ref map).Count;
     }
 
     [TestCase("....#.....\n.........#\n..........\n..#.......\n.......#..\n..........\n.#..^.....\n........#.\n#.........\n......#...", ExpectedResult = 6)]
     [TestCase("...#..\n....#.\n..#...\n.^.#..\n......", ExpectedResult = 1)]
-    [Puzzle(answer: 4711)]
+    [Puzzle(answer: 1562)]
     public int PartTwo(string input)
     {
         List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
         char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        var positions = move(ref map);
-        var data = positions.Where(pos => VirtualWalkEndsInLoop(map, pos));
-        return data.Count();
+
+        int amountOfLoops = 0;
+        for (int y = 0; y < map.Length; y++)
+        {
+            for (int x = 0; x < map.Length; x++)
+            {
+                char origionalValue = map[y][x];
+                map[y][x] = '#';
+
+                if (move(ref map) == null)
+                    amountOfLoops++;
+                map[y][x] = origionalValue;
+            }
+        }
+        return amountOfLoops;
     }
 
-    public List<Tuple<Position, Direction>> move(ref char[][] map)
+    public Dictionary<Position, int>? move(ref char[][] map)
     {
-        var ret = new List<Tuple<Position, Direction>>();
+        var ret = new Dictionary<Position, int>();
         var pos = getPos(map);
         if (pos == null)
             return [];
-
-        int targetY = 0;
-        int targetX = 0;
         char directionSymbol = ' ';
 
-        while (true)
+        Direction dir = (Direction)map[pos.y][pos.x];
+
+        while (!ret.ContainsValue(5))
         {
-            switch ((Direction)map[pos.y][pos.x])
-            {
-                case Direction.North:
-                    targetY = pos.y - 1;
-                    targetX = pos.x;
-                    directionSymbol = '^';
-                    break;
-                case Direction.East:
-                    targetY = pos.y;
-                    targetX = pos.x + 1;
-                    directionSymbol = '>';
-                    break;
-                case Direction.South:
-                    targetY = pos.y + 1;
-                    targetX = pos.x;
-                    directionSymbol = 'v';
-                    break;
-                case Direction.West:
-                    targetY = pos.y;
-                    targetX = pos.x - 1;
-                    directionSymbol = '<';
-                    break;
-            }
+            Position offset = getDirectionOffset(dir);
+            int targetY = pos.y + offset.y;
+            int targetX = pos.x + offset.x;
 
             if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
             {
-                map[pos.y][pos.x] = 'X';
+                ret.Add(new Position { x = pos.x, y = pos.y }, 1);
                 return ret;
             }
             else if (map[targetY][targetX] == '#')
             {
-                ret.Remove(new Tuple<Position, Direction>(new Position() { x = pos.x, y = pos.y }, (Direction)directionSymbol));
-                map[pos.y][pos.x] = TurnRight((Direction)map[pos.y][pos.x]);
+                dir = TurnRight(dir);
             }
             else
             {
-                ret.Add(new Tuple<Position, Direction>(new Position { x = pos.x, y = pos.y }, (Direction)directionSymbol));
-                map[pos.y][pos.x] = 'X';
-                map[targetY][targetX] = directionSymbol;
+                Position posCopy = new Position { x = pos.x, y = pos.y };
+                if (ret.ContainsKey(posCopy))
+                {
+                    ret[posCopy]++;
+                }
+                else
+                {
+                    ret.Add(new Position { x = pos.x, y = pos.y }, 1);
+                }
                 pos.y = targetY;
                 pos.x = targetX;
             }
         }
-    }
-    public bool VirtualWalkEndsInLoop(char[][] map, Tuple<Position, Direction> position)
-    {
-
-        List<Tuple<Position, Direction>> foundPositionsAndDirections = [];
-
-        Position startPos = new Position { x = position.Item1.x, y = position.Item1.y };
-        Direction startDir = position.Item2;
-
-        Position p = getDirectionOffset(startDir);
-        char OriginalValue = map[startPos.y + p.y][startPos.x + p.x];
-        map[startPos.y + p.y][startPos.x + p.x] = '#';
-
-
-        Position pos = new Position { x = position.Item1.x, y = position.Item1.y };
-        Direction dir = position.Item2;
-
-        int directionY = 0;
-        int directionX = 0;
-
-        bool ret = false;
-
-        while (true)
-        {
-            Position offset = getDirectionOffset(dir);
-            directionX = offset.x; 
-            directionY = offset.y;
-
-            if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
-            {
-                break;
-            }
-
-            int targetY = pos.y + directionY;
-            int targetX = pos.x + directionX;
-
-            char targetChar = map[targetY][targetX];
-
-            var currentPositionAndDirection = new Tuple<Position, Direction>(new Position { x = pos.x, y = pos.y }, dir);
-            if (foundPositionsAndDirections.Contains(currentPositionAndDirection))
-            {
-                ret = true;
-                break;
-            }
-            else if (targetChar != '#')
-            {
-                foundPositionsAndDirections.Add(currentPositionAndDirection);
-                pos.y = targetY;
-                pos.x = targetX;
-            }
-            else
-            {
-                dir = (Direction)TurnRight(dir);
-            }
-        }
-
-        map[startPos.y + p.y][startPos.x + p.x] = OriginalValue;
-        return ret;
+        return null;
     }
 
-    public Position? getPos(in char[][] Map)
+    public Position? getPos(char[][] Map)
     {
         for (int y = 0; y < Map.Length; y++)
         {
@@ -164,23 +102,22 @@ public class Day_06
         return null;
     }
 
-    public char TurnRight(Direction direction)
+    public static Direction TurnRight(Direction direction)
     {
         switch (direction)
         {
             case Direction.North:
-                return '>';
+                return Direction.East;
             case Direction.East:
-                return 'v';
+                return Direction.South;
             case Direction.South:
-                return '<';
-            case Direction.West:
-                return '^';
+                return Direction.West;
+            default:
+                return Direction.North;
         }
-        return ' ';
     }
 
-    void PrintMap(in char[][] map) { 
+    public static void PrintMap(in char[][] map) { 
         foreach(var row in map)
         {
             Console.WriteLine(row);
