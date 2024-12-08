@@ -146,8 +146,3 @@ public enum Direction
     South = 'v',
     West = '<'
 }
-
-public record Position{
-    public int y {  get; set; }
-    public int x {  get; set; }
-};
