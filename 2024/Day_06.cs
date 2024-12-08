@@ -8,9 +8,8 @@ public class Day_06
     [Puzzle(answer: 4711)]
     public int PartOne(string input)
     {
-        List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
-        char[][] map = lines.Select(str => str.ToArray()).ToArray();
-        return move(ref map).Count;
+        Grid<char> grid = new Grid<char>(input);
+        return move(grid).Count;
     }
 
     [TestCase("....#.....\n.........#\n..........\n..#.......\n.......#..\n..........\n.#..^.....\n........#.\n#.........\n......#...", ExpectedResult = 6)]
@@ -18,34 +17,32 @@ public class Day_06
     [Puzzle(answer: 1562)]
     public int PartTwo(string input)
     {
-        List<string> lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).ToList();
-        char[][] map = lines.Select(str => str.ToArray()).ToArray();
+        Grid<char> grid = new Grid<char>(input);
+
+        char[][] map = grid.values;
 
         int amountOfLoops = 0;
-        for (int y = 0; y < map.Length; y++)
+        grid.ForEach((x, y) =>
         {
-            for (int x = 0; x < map.Length; x++)
-            {
-                char origionalValue = map[y][x];
-                map[y][x] = '#';
+            char origionalValue = map[y][x];
+            map[y][x] = '#';
 
-                if (move(ref map) == null)
-                    amountOfLoops++;
-                map[y][x] = origionalValue;
-            }
-        }
+            if (move(grid) == null)
+                amountOfLoops++;
+            map[y][x] = origionalValue;
+            return false;
+        });
         return amountOfLoops;
     }
 
-    public Dictionary<Position, int>? move(ref char[][] map)
+    public Dictionary<Position, int>? move(Grid<char> grid)
     {
         var ret = new Dictionary<Position, int>();
-        var pos = getPos(map);
+        var pos = getPos(grid.values);
         if (pos == null)
             return [];
-        char directionSymbol = ' ';
 
-        Direction dir = (Direction)map[pos.y][pos.x];
+        Direction dir = (Direction)grid.values[pos.y][pos.x];
 
         while (!ret.ContainsValue(5))
         {
@@ -53,21 +50,20 @@ public class Day_06
             int targetY = pos.y + offset.y;
             int targetX = pos.x + offset.x;
 
-            if (pos.y == 0 || pos.y == map.Length - 1 || pos.x == 0 || pos.x == map[0].Length - 1)
+            if (grid.OnEdge(pos.x, pos.y))
             {
                 ret.Add(new Position { x = pos.x, y = pos.y }, 1);
                 return ret;
             }
-            else if (map[targetY][targetX] == '#')
+            else if (grid.values[targetY][targetX] == '#')
             {
                 dir = TurnRight(dir);
             }
             else
             {
-                Position posCopy = new Position { x = pos.x, y = pos.y };
-                if (ret.ContainsKey(posCopy))
+                if (ret.TryGetValue(pos, out int value))
                 {
-                    ret[posCopy]++;
+                    ret[pos] = ++value;
                 }
                 else
                 {
@@ -98,7 +94,6 @@ public class Day_06
                 }
             }
         }
-
         return null;
     }
 
