@@ -60,26 +60,26 @@ public class Day_09
         var diskLayout = CreateDisklayout(input);
         for (int i = diskLayout.Max(pair => pair[0]); i > 0; i--)
         {
-            int[] lastItem = diskLayout.Find(pair => pair[0] == i)!;
             int lastItemIndex = diskLayout.FindIndex(pair => pair[0] == i)!;
+            int[] item = diskLayout[lastItemIndex];
 
-            int freespaceIndex = FindIndexFirstFreespace(diskLayout, lastItem[1], i);
+            int freespaceIndex = FindIndexFirstFreespace(diskLayout, item[1], i);
             if (freespaceIndex == -1)
                 continue;
 
             int freespaceSize = diskLayout[freespaceIndex][1];
-            if (freespaceSize > lastItem[1])
+            if (freespaceSize > item[1])
             {
-                diskLayout.Remove(lastItem);
-                diskLayout.Insert(lastItemIndex, new int[] { -1, lastItem[1] });
-                diskLayout.Insert(freespaceIndex++, lastItem);
-                diskLayout[freespaceIndex] = new int[] { -1, diskLayout[freespaceIndex][1] - lastItem[1] };
+                diskLayout.Remove(item);
+                diskLayout.Insert(lastItemIndex, new int[] { -1, item[1] });
+                diskLayout.Insert(freespaceIndex++, item);
+                diskLayout[freespaceIndex] = new int[] { -1, diskLayout[freespaceIndex][1] - item[1] };
             }
-            else if (freespaceSize == lastItem[1])
+            else if (freespaceSize == item[1])
             {
-                diskLayout.Remove(lastItem);
-                diskLayout.Insert(lastItemIndex, new int[] { -1, lastItem[1] });
-                diskLayout[freespaceIndex] = lastItem;
+                diskLayout.Remove(item);
+                diskLayout.Insert(lastItemIndex, new int[] { -1, item[1] });
+                diskLayout[freespaceIndex] = item;
             }
 
             diskLayout = CombineEmpySpace(diskLayout);
