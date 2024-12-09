@@ -8,22 +8,23 @@ public class Day_09
     {
         var diskLayout = CreateDisklayout(input);
 
-        // Compression
-        while (diskLayout.Any(pair => pair.Item1 == -1)) {
+        var emptyItemCount = diskLayout.Count(pair => pair.Item1 == -1);
+
+        while (emptyItemCount > 0) {
             Tuple<int, int> lastItem = diskLayout[diskLayout.Count-1];
             diskLayout.RemoveAt(diskLayout.Count - 1);
             // remove ending empty space
             if (lastItem.Item1 == -1)
+            {
+                emptyItemCount--;
                 continue;
+            }
 
             while (lastItem.Item2 > 0) {
                 int freespaceIndex = FindIndexFirstFreespace(diskLayout);
                 if (freespaceIndex == -1)
                     break;
 
-                // if file.length < freespace.length -> prepend and resize freezpace
-                // if file.length == freespace.length -> freespace.id = file.id
-                // if file.length > freespace.length -> freespace.id = file.id, continue above two steps for next freespace
                 int freespaceSize = diskLayout[freespaceIndex].Item2;
                 if (freespaceSize > lastItem.Item2)
                 {
@@ -35,10 +36,12 @@ public class Day_09
                 {
                     diskLayout[freespaceIndex] = lastItem;
                     lastItem = new Tuple<int, int>(lastItem.Item1, 0);
+                    emptyItemCount--;
                 }
                 else {
                     diskLayout[freespaceIndex] = new Tuple<int, int>(lastItem.Item1, freespaceSize);
                     lastItem = new Tuple<int, int>(lastItem.Item1, lastItem.Item2 - freespaceSize);
+                    emptyItemCount--;
                 }
             }
             if (lastItem.Item2 > 0)
@@ -55,7 +58,6 @@ public class Day_09
     public long PartTwo(string input)
     {
         var diskLayout = CreateDisklayout(input);
-        // Compression
         for (int i = diskLayout.Max(pair => pair.Item1); i > 0; i--)
         {
             Tuple<int, int> lastItem = diskLayout.Find(pair => pair.Item1 == i)!;
@@ -65,8 +67,6 @@ public class Day_09
             if (freespaceIndex == -1)
                 continue;
 
-            // if file.length < freespace.length -> prepend and resize freezpace
-            // if file.length == freespace.length -> freespace.id = file.id
             int freespaceSize = diskLayout[freespaceIndex].Item2;
             if (freespaceSize > lastItem.Item2)
             {
@@ -93,7 +93,6 @@ public class Day_09
         string diskMap = input.TrimEnd('\n').TrimEnd('\r');
         var diskLayout = new List<Tuple<int, int>>(); // id, length
 
-        // Split disklayout
         int id = 0;
         bool isFile = true;
         foreach (char c in diskMap)
@@ -148,13 +147,15 @@ public class Day_09
         int maxIndex = diskLayout.Count - 1;
         for (int i = 0; i < maxIndex; i++)
         {
-            if (diskLayout[i].Item1 == -1 && diskLayout[i + 1].Item1 == -1)
+            var current = diskLayout[i];
+            var next = diskLayout[i + 1];
+
+            if (current.Item1 == -1 && next.Item1 == -1)
             {
-                diskLayout[i] = new Tuple<int, int>(-1, diskLayout[i].Item2 + diskLayout[i + 1].Item2);
+                diskLayout[i] = new Tuple<int, int>(-1, current.Item2 + next.Item2);
                 diskLayout.RemoveAt(i + 1);
                 --maxIndex;
             }
-
         }
 
         return diskLayout;
