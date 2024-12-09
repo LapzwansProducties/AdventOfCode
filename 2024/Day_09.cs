@@ -21,7 +21,7 @@ public class Day_09
             }
 
             while (lastItem.Item2 > 0) {
-                int freespaceIndex = FindIndexFirstFreespace(diskLayout);
+                int freespaceIndex = diskLayout.FindIndex(pair => pair.Item1 == -1);
                 if (freespaceIndex == -1)
                     break;
 
@@ -101,15 +101,6 @@ public class Day_09
             isFile = !isFile;
         }
         return diskLayout;
-    }
-
-    public static int FindIndexFirstFreespace(List<Tuple<int, int>> diskLayout) {
-        for (int i = 0; i < diskLayout.Count; i++)
-        {
-            if (diskLayout[i].Item1 == -1)
-                return i;
-        }
-        return -1;
     }
 
     public static int FindIndexFirstFreespace(List<Tuple<int, int>> diskLayout, int length, int currentId)
