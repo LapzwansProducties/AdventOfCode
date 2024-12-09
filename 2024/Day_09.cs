@@ -8,43 +8,43 @@ public class Day_09
     {
         var diskLayout = CreateDisklayout(input);
 
-        var emptyItemCount = diskLayout.Count(pair => pair.Item1 == -1);
+        var emptyItemCount = diskLayout.Count(pair => pair[0] == -1);
 
         while (emptyItemCount > 0) {
-            Tuple<int, int> lastItem = diskLayout[diskLayout.Count-1];
+            int[] lastItem = diskLayout[diskLayout.Count-1];
             diskLayout.RemoveAt(diskLayout.Count - 1);
             // remove ending empty space
-            if (lastItem.Item1 == -1)
+            if (lastItem[0] == -1)
             {
                 emptyItemCount--;
                 continue;
             }
 
-            while (lastItem.Item2 > 0) {
-                int freespaceIndex = diskLayout.FindIndex(pair => pair.Item1 == -1);
+            while (lastItem[1] > 0) {
+                int freespaceIndex = diskLayout.FindIndex(pair => pair[0] == -1);
                 if (freespaceIndex == -1)
                     break;
 
-                int freespaceSize = diskLayout[freespaceIndex].Item2;
-                if (freespaceSize > lastItem.Item2)
+                int freespaceSize = diskLayout[freespaceIndex][1];
+                if (freespaceSize > lastItem[1])
                 {
                     diskLayout.Insert(freespaceIndex++, lastItem);
-                    diskLayout[freespaceIndex] = new Tuple<int, int>(-1, diskLayout[freespaceIndex].Item2 - lastItem.Item2);
-                    lastItem = new Tuple<int, int>(lastItem.Item1, 0);
+                    diskLayout[freespaceIndex] = new int[] { -1, diskLayout[freespaceIndex][1] - lastItem[1] };
+                    lastItem = new int[] { lastItem[0], 0 };
                 }
-                else if (freespaceSize == lastItem.Item2)
+                else if (freespaceSize == lastItem[1])
                 {
                     diskLayout[freespaceIndex] = lastItem;
-                    lastItem = new Tuple<int, int>(lastItem.Item1, 0);
+                    lastItem = new int[] { lastItem[0], 0 };
                     emptyItemCount--;
                 }
                 else {
-                    diskLayout[freespaceIndex] = new Tuple<int, int>(lastItem.Item1, freespaceSize);
-                    lastItem = new Tuple<int, int>(lastItem.Item1, lastItem.Item2 - freespaceSize);
+                    diskLayout[freespaceIndex] = new int[] { lastItem[0], freespaceSize };
+                    lastItem = new int[] { lastItem[0], lastItem[1] - freespaceSize };
                     emptyItemCount--;
                 }
             }
-            if (lastItem.Item2 > 0)
+            if (lastItem[1] > 0)
             {
                 diskLayout.Add(lastItem);
             }
@@ -58,27 +58,27 @@ public class Day_09
     public long PartTwo(string input)
     {
         var diskLayout = CreateDisklayout(input);
-        for (int i = diskLayout.Max(pair => pair.Item1); i > 0; i--)
+        for (int i = diskLayout.Max(pair => pair[0]); i > 0; i--)
         {
-            Tuple<int, int> lastItem = diskLayout.Find(pair => pair.Item1 == i)!;
-            int lastItemIndex = diskLayout.FindIndex(pair => pair.Item1 == i)!;
+            int[] lastItem = diskLayout.Find(pair => pair[0] == i)!;
+            int lastItemIndex = diskLayout.FindIndex(pair => pair[0] == i)!;
 
-            int freespaceIndex = FindIndexFirstFreespace(diskLayout, lastItem.Item2, i);
+            int freespaceIndex = FindIndexFirstFreespace(diskLayout, lastItem[1], i);
             if (freespaceIndex == -1)
                 continue;
 
-            int freespaceSize = diskLayout[freespaceIndex].Item2;
-            if (freespaceSize > lastItem.Item2)
+            int freespaceSize = diskLayout[freespaceIndex][1];
+            if (freespaceSize > lastItem[1])
             {
                 diskLayout.Remove(lastItem);
-                diskLayout.Insert(lastItemIndex, new Tuple<int, int>(-1, lastItem.Item2));
+                diskLayout.Insert(lastItemIndex, new int[] { -1, lastItem[1] });
                 diskLayout.Insert(freespaceIndex++, lastItem);
-                diskLayout[freespaceIndex] = new Tuple<int, int>(-1, diskLayout[freespaceIndex].Item2 - lastItem.Item2);
+                diskLayout[freespaceIndex] = new int[] { -1, diskLayout[freespaceIndex][1] - lastItem[1] };
             }
-            else if (freespaceSize == lastItem.Item2)
+            else if (freespaceSize == lastItem[1])
             {
                 diskLayout.Remove(lastItem);
-                diskLayout.Insert(lastItemIndex, new Tuple<int, int>(-1, lastItem.Item2));
+                diskLayout.Insert(lastItemIndex, new int[] { -1, lastItem[1] });
                 diskLayout[freespaceIndex] = lastItem;
             }
 
@@ -89,51 +89,51 @@ public class Day_09
     }
 
 
-    public static List<Tuple<int, int>> CreateDisklayout(string input) {
+    public static List<int[]> CreateDisklayout(string input) {
         string diskMap = input.TrimEnd('\n').TrimEnd('\r');
-        var diskLayout = new List<Tuple<int, int>>(); // id, length
+        var diskLayout = new List<int[]>(); // id, length
 
         int id = 0;
         bool isFile = true;
         foreach (char c in diskMap)
         {
-            diskLayout.Add(isFile ? new Tuple<int, int>(id++, c - '0') : new Tuple<int, int>(-1, c - '0'));
+            diskLayout.Add(isFile ? new int[] { id++, c - '0' } : new int[] { -1, c - '0' });
             isFile = !isFile;
         }
         return diskLayout;
     }
 
-    public static int FindIndexFirstFreespace(List<Tuple<int, int>> diskLayout, int length, int currentId)
+    public static int FindIndexFirstFreespace(List<int[]> diskLayout, int length, int currentId)
     {
         for (int i = 0; i < diskLayout.Count; i++)
         {
-            if (diskLayout[i].Item1 == currentId)
+            if (diskLayout[i][0] == currentId)
                 break;
-            if (diskLayout[i].Item1 == -1 && diskLayout[i].Item2 >= length)
+            if (diskLayout[i][0] == -1 && diskLayout[i][1] >= length)
                 return i;
         }
         return -1;
     }
 
-    public static long CalculateChecksum(List<Tuple<int, int>> diskLayout) {
+    public static long CalculateChecksum(List<int[]> diskLayout) {
         long checkSum = 0;
         long blockIndex = 0;
         foreach (var block in diskLayout)
         {
-            if (block.Item1 == -1) {
-                blockIndex += block.Item2;
+            if (block[0] == -1) {
+                blockIndex += block[1];
                 continue;
             }
-            for (int i = 0; i < block.Item2; i++)
+            for (int i = 0; i < block[1]; i++)
             {
-                checkSum += block.Item1 * blockIndex++;
+                checkSum += block[0] * blockIndex++;
             }
         }
 
         return checkSum;
     }
 
-    public static List<Tuple<int, int>> CombineEmpySpace(List<Tuple<int, int>> diskLayout)
+    public static List<int[]> CombineEmpySpace(List<int[]> diskLayout)
     {
         int maxIndex = diskLayout.Count - 1;
         for (int i = 0; i < maxIndex; i++)
@@ -141,9 +141,9 @@ public class Day_09
             var current = diskLayout[i];
             var next = diskLayout[i + 1];
 
-            if (current.Item1 == -1 && next.Item1 == -1)
+            if (current[0] == -1 && next[0] == -1)
             {
-                diskLayout[i] = new Tuple<int, int>(-1, current.Item2 + next.Item2);
+                diskLayout[i] = new int[] { -1, current[1] + next[1] };
                 diskLayout.RemoveAt(i + 1);
                 --maxIndex;
             }
