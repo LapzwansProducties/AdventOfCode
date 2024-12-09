@@ -13,7 +13,6 @@ public class Day_09
         while (emptyItemCount > 0) {
             int[] lastItem = diskLayout[diskLayout.Count-1];
             diskLayout.RemoveAt(diskLayout.Count - 1);
-            // remove ending empty space
             if (lastItem[0] == -1)
             {
                 emptyItemCount--;
@@ -81,8 +80,6 @@ public class Day_09
                 diskLayout.Insert(itemIndex, new int[] { -1, item[1] });
                 diskLayout[freespaceIndex] = item;
             }
-
-            diskLayout = CombineEmpySpace(diskLayout);
         }
 
         return CalculateChecksum(diskLayout);
@@ -129,24 +126,5 @@ public class Day_09
         }
 
         return checkSum;
-    }
-
-    public static List<int[]> CombineEmpySpace(List<int[]> diskLayout)
-    {
-        int maxIndex = diskLayout.Count - 1;
-        for (int i = 0; i < maxIndex; i++)
-        {
-            var current = diskLayout[i];
-            var next = diskLayout[i + 1];
-
-            if (current[0] == -1 && next[0] == -1)
-            {
-                diskLayout[i] = new int[] { -1, current[1] + next[1] };
-                diskLayout.RemoveAt(i + 1);
-                --maxIndex;
-            }
-        }
-
-        return diskLayout;
     }
 }
