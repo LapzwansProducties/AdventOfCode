@@ -63,7 +63,7 @@ public class Day_09
             int itemIndex = diskLayout.FindIndex(pair => pair[0] == i)!;
             int[] item = diskLayout[itemIndex];
 
-            int freespaceIndex = FindIndexFirstFreespace(diskLayout, item[1], i);
+            int freespaceIndex = FindIndexFirstFreespace(diskLayout, item[1], itemIndex);
             if (freespaceIndex == -1)
                 continue;
 
@@ -103,12 +103,10 @@ public class Day_09
         return diskLayout;
     }
 
-    public static int FindIndexFirstFreespace(List<int[]> diskLayout, int length, int currentId)
+    public static int FindIndexFirstFreespace(List<int[]> diskLayout, int length, int checkUntill)
     {
-        for (int i = 0; i < diskLayout.Count; i++)
+        for (int i = 0; i < checkUntill; i++)
         {
-            if (diskLayout[i][0] == currentId)
-                break;
             if (diskLayout[i][0] == -1 && diskLayout[i][1] >= length)
                 return i;
         }
