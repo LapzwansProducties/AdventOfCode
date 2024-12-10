@@ -38,7 +38,7 @@ public class Day_10
             {
                 foreach (var pos in listCurrent)
                 {
-                    listHigher.AddRange(surroundingupperNumbers(grid, pos));
+                    listHigher.AddRange(surroundingupperNumbers(grid, pos.x, pos.y));
                 }
                 listCurrent = listHigher;
                 listHigher = [];
@@ -50,15 +50,14 @@ public class Day_10
         return paths;
     }
 
-    public List<Position> surroundingupperNumbers(Grid<int> grid, Position pos)
+    public List<Position> surroundingupperNumbers(Grid<int> grid, int x, int y)
     {
         List<Position> ret = [];
-        int num = grid.values[pos.y][pos.x] + 1;
-        if (grid.InBounds(pos.x, pos.y + 1) && grid.values[pos.y + 1][pos.x] == num) ret.Add(new Position { x = pos.x, y = pos.y + 1 });
-        if (grid.InBounds(pos.x, pos.y - 1) && grid.values[pos.y - 1][pos.x] == num) ret.Add(new Position { x = pos.x, y = pos.y - 1 });
-        if (grid.InBounds(pos.x + 1, pos.y) && grid.values[pos.y][pos.x + 1] == num) ret.Add(new Position { x = pos.x + 1, y = pos.y });
-        if (grid.InBounds(pos.x - 1, pos.y) && grid.values[pos.y][pos.x - 1] == num) ret.Add(new Position { x = pos.x - 1, y = pos.y });
-
+        int num = grid.values[y][x] + 1;
+        if (y + 1 <= grid.maxY && grid.values[y + 1][x] == num) ret.Add(new Position { x = x, y = y + 1 });
+        if (y - 1 >= 0         && grid.values[y - 1][x] == num) ret.Add(new Position { x = x, y = y - 1 });
+        if (x + 1 <= grid.maxX && grid.values[y][x + 1] == num) ret.Add(new Position { x = x + 1, y = y });
+        if (x - 1 >= 0         && grid.values[y][x - 1] == num) ret.Add(new Position { x = x - 1, y = y });
         return ret;
     }
 }
