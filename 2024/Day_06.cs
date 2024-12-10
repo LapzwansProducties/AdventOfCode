@@ -8,7 +8,7 @@ public class Day_06
     [Puzzle(answer: 4711)]
     public int PartOne(string input)
     {
-        Grid<char> grid = new Grid<char>(input);
+        Grid<char> grid = new Grid<char>(input, true);
         return move(grid).Count;
     }
 
@@ -17,7 +17,7 @@ public class Day_06
     [Puzzle(answer: 1562)]
     public int PartTwo(string input)
     {
-        Grid<char> grid = new Grid<char>(input);
+        Grid<char> grid = new Grid<char>(input, true);
 
         char[][] map = grid.values;
 

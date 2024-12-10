@@ -16,7 +16,7 @@ namespace AdventOfCode._2024
 
 
 
-        public Grid(string input)
+        public Grid(string input, bool seperatedBySpace)
         {
             var lines = input.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
             height = lines.Length;
@@ -32,9 +32,15 @@ namespace AdventOfCode._2024
             }
             else if (typeof(T) == typeof(int))
             {
-                values = input
-                    .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-                    .Select(str => str.TrimEnd('\n').TrimEnd('\r').Split(' ').Select(int.Parse).ToArray() as T[]).ToArray();
+                if (seperatedBySpace)
+                    values = input
+                        .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(str => str.TrimEnd('\n').TrimEnd('\r').Split(' ').Select(int.Parse).ToArray() as T[]).ToArray();
+                else
+                    values = input
+                        .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                        .Select(str => str.TrimEnd('\n').TrimEnd('\r').ToArray().Select(c => c - '0').ToArray() as T[]).ToArray();
+                width = values[0].Length;
                 maxX = width - 1;
             }
             else
