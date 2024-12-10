@@ -33,15 +33,14 @@ public class Day_10
         foreach (var zeroPos in zeroes)
         {
             List<Position> listCurrent = [zeroPos];
-            List<Position> listHigher = [];
             for (int num = 0; num < 9; num++)
             {
+                List<Position> listHigher = [];
                 foreach (var pos in listCurrent)
                 {
                     listHigher.AddRange(surroundingupperNumbers(grid, pos.x, pos.y));
                 }
                 listCurrent = listHigher;
-                listHigher = [];
             }
             paths += distinctTops ? listCurrent.Distinct().Count() : listCurrent.Count;
         }
