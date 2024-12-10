@@ -43,8 +43,7 @@ public class Day_10
                 listCurrent = listHigher;
                 listHigher = [];
             }
-            if (distinctTops) paths += listCurrent.Distinct().Count();
-            else paths += listCurrent.Count;
+            paths += distinctTops ? listCurrent.Distinct().Count() : listCurrent.Count;
         }
 
         return paths;
